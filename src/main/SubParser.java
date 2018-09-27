@@ -80,6 +80,7 @@ public class SubParser {
 
 		} catch (IOException e) {
 			e.printStackTrace();
+			System.exit(1);
 		} finally {
 			try {
 
@@ -99,6 +100,7 @@ public class SubParser {
 			} catch (IOException ex) {
 
 				ex.printStackTrace();
+				System.exit(1);
 
 		}
 
