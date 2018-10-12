@@ -11,6 +11,7 @@ public class SubParser {
 	private static final Pattern PATTERN_TIME = Pattern.compile("([\\d]{2}:[\\d]{2}:[\\d]{2},[\\d]{3}).*([\\d]{2}:[\\d]{2}:[\\d]{2},[\\d]{3})");
 	private static final Pattern PATTERN_NUMBERS = Pattern.compile("(\\d+)");
 	private static final Charset DEFAULT_CHARSET = Charset.forName("UTF-8");
+	private static final Pattern PATTERN_SINGLETIME = Pattern.compile("/(\d+):(\d{2}):(\d{2}),(\d{3})/");
 
 	public static void main(String[] args) {
 		Tokenizer tokenizer = Tokenizer.builder().build();
@@ -29,7 +30,13 @@ public class SubParser {
 			INPUT = args[0];
 			OUTPUT = args[1];
 		}
-		
+		public static int timeMs(String text) {
+			Matcher matcher = PATTERN_SINGLETIME.matcher(text);
+			if(matcher.find()) {
+				
+			}
+			return 
+		}
 
 		try {
 			fr = new FileReader(INPUT);
@@ -39,19 +46,21 @@ public class SubParser {
 			String line;
 			srt = new StringBuilder();
 
+			//start read file
+			bw.write("[");
 			while ((line = br.readLine()) != null ) {
 				Matcher matcher = PATTERN_NUMBERS.matcher(line);
 				if(matcher.find()) {
-					bw.write(line);
-					bw.newLine();
+					bw.write("{");
+					bw.write("\"id\":"+line+",");
 					line = br.readLine();
-
 				}
 				matcher = PATTERN_TIME.matcher(line);
 
 				if(matcher.find()) {
-					bw.write(line);
-					bw.newLine();
+					String[] parts = line.split(" ");
+					bw.write("\"startTime\":"+parts[0]+",");
+					bw.write("\"endTime:\"	"+parts[2]+",");
 				}
 
 				String aux;
