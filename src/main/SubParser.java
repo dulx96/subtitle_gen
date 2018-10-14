@@ -1,17 +1,30 @@
 import org.atilika.kuromoji.Token;
 import org.atilika.kuromoji.Tokenizer;
+import com.mariten.kanatools.KanaConverter;
 import java.io.*;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+
 public class SubParser {
 	
 	private static final Pattern PATTERN_TIME = Pattern.compile("([\\d]{2}:[\\d]{2}:[\\d]{2},[\\d]{3}).*([\\d]{2}:[\\d]{2}:[\\d]{2},[\\d]{3})");
 	private static final Pattern PATTERN_NUMBERS = Pattern.compile("(\\d+)");
 	private static final Charset DEFAULT_CHARSET = Charset.forName("UTF-8");
-
+	private static final Pattern PATTERN_SINGLETIME = Pattern.compile("([\\d]{2}):([\\d]{2}):([\\d]{2}),([\\d]{3})");
+	private static int timeMs(String text) {
+			Matcher matcher = PATTERN_SINGLETIME.matcher(text);
+			if(matcher.find()) {
+				int[] time = new int[5];
+				for(int i = 1; i < 5 ; i++) {
+					time[i-1] = Integer.parseInt(matcher.group(i));
+				}
+			return time[0] * 3600000 + time[1] * 60000 + time[2] * 1000 + time[3];			
+			}
+			else return 0;
+		}
 	public static void main(String[] args) {
 		Tokenizer tokenizer = Tokenizer.builder().build();
 		BufferedReader br = null;
@@ -22,6 +35,13 @@ public class SubParser {
 
 		String INPUT=null;
 		String OUTPUT=null;
+		
+		int x = 0;
+		int y = 0;
+		
+		//convert kata to hira
+		int conv_op_flags = KanaConverter.OP_ZEN_KATA_TO_ZEN_HIRA | KanaConverter.OP_ZEN_ASCII_TO_HAN_ASCII;
+		// int conv_op_flags = KanaConverter.OP_HAN_KATA_TO_ZEN_KATA | KanaConverter.OP_ZEN_ASCII_TO_HAN_ASCII;
 
 		if(args.length < 2)
 			System.out.println("Nhap file dau vao, dau ra!!!");
@@ -39,23 +59,31 @@ public class SubParser {
 			String line;
 			srt = new StringBuilder();
 
+			//start read file
+			bw.write("[");
 			while ((line = br.readLine()) != null ) {
+				if (x++!=0) bw.write(",");
+				//id
 				Matcher matcher = PATTERN_NUMBERS.matcher(line);
 				if(matcher.find()) {
-					bw.write(line);
-					bw.newLine();
+					bw.write("{");
+					bw.write("\"id\":"+x+",");
 					line = br.readLine();
-
 				}
+
+				//time
 				matcher = PATTERN_TIME.matcher(line);
 
 				if(matcher.find()) {
-					bw.write(line);
-					bw.newLine();
+					String[] parts = line.split(" ");
+					bw.write("\"startTime\":"+ timeMs(parts[0])+",");
+					bw.write("\"endTime\":"+ timeMs(parts[2])+",");
 				}
 
+				//text
 				String aux;
-
+				bw.write("\"text\":");
+				bw.write("[");
 				while((aux = br.readLine()) != null && !aux.isEmpty()) {
 					srt.append(aux);
 					line = srt.toString();
@@ -63,20 +91,41 @@ public class SubParser {
 						line = line.replaceAll("<[^>]*>", "");// clear all tags
 					srt.setLength(0);
 
+				
 					for(Token token : tokenizer.tokenize(line)) {
-						srt.append("<span data-baseform=\"");
-						srt.append(token.getBaseForm());
-						srt.append("\">");
-						srt.append(token.getSurfaceForm());
-						srt.append("</span>");	
+						if (y!=0) bw.write(",");
+						y = y + 1;
+						bw.write("{");
+						bw.write("\"surfaceForm\":"+"\""+token.getSurfaceForm()+"\""+",");
+
+						if(token.getBaseForm() == null) {
+							bw.write("\"baseForm\":"+"null"+",");	
+
+						} else if(token.getBaseForm().equals("null")) {
+							bw.write("\"baseForm\":"+"null"+",");	
+						} else {
+							bw.write("\"baseForm\":"+"\""+token.getBaseForm()+"\""+",");							
+						}
+						String reading = token.getReading();
+						bw.write("\"reading\":"+"\""+reading+"\""+",");
+						if(reading == null) {
+							bw.write("\"hiragana\":"+"\""+reading+"\""+",");
+						} else {
+							bw.write("\"hiragana\":"+"\""+KanaConverter.convertKana(token.getReading(), conv_op_flags)+"\""+",");							
+						}
+						bw.write("\"partOfSpeech\":"+"\""+token.getPartOfSpeech()+"\""+",");								
+						bw.write("\"isUnknown\":"+token.isUnknown());								
+						bw.write("}");
 						line = srt.toString();
 					}
-					bw.write(line);
-					bw.newLine();
 					srt.setLength(0);
 				}
-				bw.newLine();
+					y = 0;
+					bw.write("]");
+				bw.write("}");
 			}
+			bw.write("]");
+
 
 		} catch (IOException e) {
 			e.printStackTrace();
