@@ -25,6 +25,14 @@ public class SubParser {
 			}
 			else return 0;
 		}
+	private static String cleanSub(String sub) {
+		String temp = "";
+		temp = sub.replaceAll("<[^>]*>", "");// clear all tags
+		temp = temp.replaceAll("\"","”"); // clear \" character
+		String regex1 = "\\x5C\\x4E";
+		temp = temp.replaceAll(regex1," "); // clear \N from ass 
+		return temp;
+	}
 	public static void main(String[] args) {
 		Tokenizer tokenizer = Tokenizer.builder().build();
 		BufferedReader br = null;
@@ -88,7 +96,10 @@ public class SubParser {
 					srt.append(aux);
 					line = srt.toString();
 					if (line != null && !line.isEmpty())
-						line = line.replaceAll("<[^>]*>", "");// clear all tags
+						line = cleanSub(line);
+						System.out.println(line);
+						// line = line.replaceAll("<[^>]*>", "");// clear all tags
+						// line = line.replaceAll("\"","”"); // clear \" character
 					srt.setLength(0);
 
 				
