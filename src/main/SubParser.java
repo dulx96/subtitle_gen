@@ -28,9 +28,10 @@ public class SubParser {
 	private static String cleanSub(String sub) {
 		String temp = "";
 		temp = sub.replaceAll("<[^>]*>", "");// clear all tags
-		temp = temp.replaceAll("\"","”"); // clear \" character
+		temp = temp.replaceAll("[\\\\]\"","”"); // clear \" character to japanese char
 		String regex1 = "\\x5C\\x4E";
 		temp = temp.replaceAll(regex1," "); // clear \N from ass 
+		temp = temp.replaceAll("\\\\(.* )",""); // clear annoying tag
 		return temp;
 	}
 	public static void main(String[] args) {
@@ -98,15 +99,12 @@ public class SubParser {
 					if (line != null && !line.isEmpty())
 						line = cleanSub(line);
 						System.out.println(line);
-						// line = line.replaceAll("<[^>]*>", "");// clear all tags
-						// line = line.replaceAll("\"","”"); // clear \" character
 					srt.setLength(0);
-
-				
 					for(Token token : tokenizer.tokenize(line)) {
 						if (y!=0) bw.write(",");
 						y = y + 1;
 						bw.write("{");
+						System.out.println(token.getSurfaceForm());
 						bw.write("\"surfaceForm\":"+"\""+token.getSurfaceForm()+"\""+",");
 
 						if(token.getBaseForm() == null) {
@@ -128,7 +126,7 @@ public class SubParser {
 						bw.write("\"isUnknown\":"+token.isUnknown());								
 						bw.write("}");
 						line = srt.toString();
-					}
+					}	
 					srt.setLength(0);
 				}
 					y = 0;
@@ -155,6 +153,7 @@ public class SubParser {
 
 				if(fw != null )
 					fw.close();
+				System.exit(0);
 
 				
 			} catch (IOException ex) {
