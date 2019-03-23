@@ -28,10 +28,10 @@ public class SubParser {
 	private static String cleanSub(String sub) {
 		String temp = "";
 		temp = sub.replaceAll("<[^>]*>", "");// clear all tags
-		temp = temp.replaceAll("[\\\\]\"","”"); // clear \" character to japanese char
+		temp = temp.replaceAll("\"","”"); // clear \" character to japanese char
 		String regex1 = "\\x5C\\x4E";
 		temp = temp.replaceAll(regex1," "); // clear \N from ass 
-		temp = temp.replaceAll("\\\\(.* )",""); // clear annoying tag
+		temp = temp.replaceAll("\\\\",""); // clear annoying tag
 		return temp;
 	}
 	public static void main(String[] args) {
@@ -71,6 +71,9 @@ public class SubParser {
 			//start read file
 			bw.write("[");
 			while ((line = br.readLine()) != null ) {
+				if(line.isEmpty()) {
+					continue;
+				}
 				if (x++!=0) bw.write(",");
 				//id
 				Matcher matcher = PATTERN_NUMBERS.matcher(line);
@@ -98,13 +101,13 @@ public class SubParser {
 					line = srt.toString();
 					if (line != null && !line.isEmpty())
 						line = cleanSub(line);
-						System.out.println(line);
+						// System.out.println(line);
 					srt.setLength(0);
 					for(Token token : tokenizer.tokenize(line)) {
 						if (y!=0) bw.write(",");
 						y = y + 1;
 						bw.write("{");
-						System.out.println(token.getSurfaceForm());
+						// System.out.println(token.getSurfaceForm());
 						bw.write("\"surfaceForm\":"+"\""+token.getSurfaceForm()+"\""+",");
 
 						if(token.getBaseForm() == null) {
